@@ -1,0 +1,31 @@
+Benchmark #1: python cluster.py ../../data/events_anomalydetection.h5 -j 1 --chunk-size 1 --max-events 1
+  Time (mean ± σ):     564.5 ms ±  13.8 ms    [User: 933.1 ms, System: 833.1 ms]
+  Range (min … max):   546.7 ms … 597.6 ms    10 runs
+ 
+Benchmark #2: python cluster.py ../../data/events_anomalydetection.h5 -j 1 --chunk-size 10 --max-events 10
+  Time (mean ± σ):     544.1 ms ±  16.2 ms    [User: 948.4 ms, System: 854.7 ms]
+  Range (min … max):   524.6 ms … 578.2 ms    10 runs
+ 
+Benchmark #3: python cluster.py ../../data/events_anomalydetection.h5 -j 1 --chunk-size 100 --max-events 100
+  Time (mean ± σ):     729.0 ms ±   8.2 ms    [User: 1.151 s, System: 0.844 s]
+  Range (min … max):   721.2 ms … 749.1 ms    10 runs
+ 
+Benchmark #4: python cluster.py ../../data/events_anomalydetection.h5 -j 1 --chunk-size 1000 --max-events 1000
+  Time (mean ± σ):      2.823 s ±  0.135 s    [User: 3.193 s, System: 0.850 s]
+  Range (min … max):    2.722 s …  3.166 s    10 runs
+ 
+Benchmark #5: python cluster.py ../../data/events_anomalydetection.h5 -j 1 --chunk-size 10000 --max-events 10000
+  Time (mean ± σ):     22.857 s ±  0.664 s    [User: 23.213 s, System: 0.877 s]
+  Range (min … max):   22.370 s … 24.668 s    10 runs
+ 
+Benchmark #6: python cluster.py ../../data/events_anomalydetection.h5 -j 1 --chunk-size 100000 --max-events 100000
+  Time (mean ± σ):     223.814 s ±  2.284 s    [User: 223.288 s, System: 1.453 s]
+  Range (min … max):   220.888 s … 227.625 s    10 runs
+ 
+Summary
+  'python cluster.py ../../data/events_anomalydetection.h5 -j 1 --chunk-size 10 --max-events 10' ran
+    1.04 ± 0.04 times faster than 'python cluster.py ../../data/events_anomalydetection.h5 -j 1 --chunk-size 1 --max-events 1'
+    1.34 ± 0.04 times faster than 'python cluster.py ../../data/events_anomalydetection.h5 -j 1 --chunk-size 100 --max-events 100'
+    5.19 ± 0.29 times faster than 'python cluster.py ../../data/events_anomalydetection.h5 -j 1 --chunk-size 1000 --max-events 1000'
+   42.01 ± 1.75 times faster than 'python cluster.py ../../data/events_anomalydetection.h5 -j 1 --chunk-size 10000 --max-events 10000'
+  411.38 ± 12.96 times faster than 'python cluster.py ../../data/events_anomalydetection.h5 -j 1 --chunk-size 100000 --max-events 100000'
