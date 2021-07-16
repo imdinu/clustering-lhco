@@ -141,4 +141,4 @@ if __name__ == "__main__":
         if bkg_df is not None:
             bkg_df.to_hdf(f"./{features}_bkg.h5", key="bkg")
         if sig_df is not None:
-            bkg_df.to_hdf(f"./{features}_sig.h5", key="bkg")
+            sig_df.to_hdf(f"./{features}_sig.h5", key="bkg")
