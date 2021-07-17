@@ -11,13 +11,21 @@ from jetminer import substructure
 from jetminer import eventlevel
 
 FEATURES_PYJET = ["pt", "eta", "phi", "mass", "e", ]
-
-
-FEATURES_RINGS = []
 FEATURES_EVENT = ["mjj", "nj"]
 
 
 def cluster_event(event, cluster_algo="antikt", R=1):
+    """Clusters particle flow event data into jets.
+
+    Args:
+        events (np.array): 1-dimensional array of particle information (pT, eta, phi).
+        cluster_algo (str): Selection of clustering algorithm. Possible options 
+            are `kt`, `antikt`, `cambridge`, `genkt`.
+        R (float): Jet radius used for clustering.
+
+    Returns:
+        Sequence of clustered jets.
+    """
     pseudojets_input = np.zeros(
         np.count_nonzero(event)//3, dtype=DTYPE_PTEPM)
     tmp = event[event.nonzero()].reshape(-1, 3)
@@ -30,6 +38,15 @@ def cluster_event(event, cluster_algo="antikt", R=1):
 
 
 def pyjet_features(jet, idx):
+    """Creates feature dictionary with pyjet attributes.
+
+    Args:
+        jet (`PseudoJet`): input jet
+        idx (int): input jet's index number (in pT ordering)
+
+    Returns:
+        Dictionary of pyjet features, with jet index included in key names.
+    """
     if jet is not None:
         return {
             f"{feature}_{idx+1}": attrgetter(feature)(jet)
@@ -43,6 +60,17 @@ def pyjet_features(jet, idx):
 
 
 def substructure_features(jet, idx, **kwargs):
+    """Creates feature dictionary with jet's substructure variables.
+
+    Args:
+        jet (`PseudoJet`): Input jet.
+        idx (int): Input jet's index number (in pT ordering).
+        **kwargs: Arguments used in substructure variable calculation.
+
+    Returns:
+        Dictionary of jet's substructure variables, with jet index included 
+        in key names.
+    """
     if jet is not None:
         return {
             f"{feature}_{idx+1}": getattr(substructure, feature)(jet, **kwargs)
@@ -56,6 +84,14 @@ def substructure_features(jet, idx, **kwargs):
 
 
 def event_features(jets):
+    """Creates feature dictionary event-level features.
+
+    Args:
+        jets (list of `PseudoJet`): Event clustered as a list of jets.
+
+    Returns:
+        Dictionary of event-level features.
+    """
     return {
         f"{feature}": getattr(eventlevel, feature)(jets)
         for feature in eventlevel.__all__
@@ -69,7 +105,20 @@ def pad_list(l, size):
 
 
 def clustering_LHCO(path_in, start, stop, path_out, bars=None, **kwargs):
+    """Runs a clustering algorithm on LHC Olympics data.
 
+    Args:
+        path_in (str or `Path`): Path of input LHCO dataset.
+        start (int): Index of first desired event of the dataset.
+        stop (int): Index of last desired event of the dataset.
+        path_out (str or `Path`): Path of output folder, where results
+             are stored.
+        bars ():
+        **kwargs:
+
+    Returns:
+        Return code 0 for success. None otherwise
+    """
     if bars:
         pno = mpi.current_process()._identity[0]
         bar = bars[(pno-1) % len(bars)]

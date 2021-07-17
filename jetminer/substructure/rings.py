@@ -15,7 +15,8 @@ DEFAULT_RINGS = [[0, 0.01], [0.01, 0.01668101], [0.01668101, 0.02782559],
 def make_ring_fn(ring, no):
     def f(jet, **kwargs):
         return energy_ring(jet, *ring)
-    exec(f"global eRing{no:d}; eRing{no:d} = f")
+    globals()[f"eRing{no:d}"] = f
+    #exec(f"global eRing{no:d}; eRing{no:d} = f")
 
 
 if __name__ != "__main__":
