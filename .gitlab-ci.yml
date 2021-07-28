@@ -10,3 +10,12 @@ pages:
     - public
   only:
   - master
+
+deploy:
+  stage: deploy
+  variables:
+    "EOS_PATH": "/eos/user/i/idinu"
+  image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer
+  script:
+    - deploy-eos
+
