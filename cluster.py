@@ -1,3 +1,27 @@
+"""Main script for LHC Olympics data processing.
+
+This script is designed to apply jet clustering and feature engineering to the
+LHC olympics datasets, which are available as a collection of 4-vectors
+associated with events' constituent particles. Given that all events are 
+independent, this process can be heavily parallelized resulting in significant
+execution time reduction.  
+
+Example:
+
+    For script usage details use::
+
+        $ python cluster --help
+
+At the moment the full scope of this project is yet to be realized, but the 
+remaining features are soon to be implemented.
+
+Todo:
+    * Include jet image generation functionality
+    * Implement masterkey recognition
+
+"""
+
+
 import argparse
 import os
 import shutil
@@ -19,10 +43,14 @@ mpi.set_start_method('fork')
 
 def merge(path, feature):
     '''
-    Merge all .hdf files in given directory
+    Merge all .hdf files in given directory.
+
+    This function is called once at the end of the clustering run in order to 
+    unite all the partial results obtained from parallell clustering 
+    execution.
 
     Returns:
-      DataFrame from merged .hdf files
+      `DataFrame` from merged .hdf files
     '''
     signal_files = sorted(path.glob(f"{feature}_sig*"))
     background_files = sorted(path.glob(f"{feature}_bkg*"))
@@ -53,7 +81,11 @@ kwargs = {
     "ptmin2": 0,
     "dcut": 0.1
 }
+"""dict: default values for data clustering parameters
 
+The parameters in question are `R`, `njets`, `cluster_algo`, `masterkey`, `R2`
+`ptmin`, `ptmin2`, `dcut`. 
+"""
 
 if __name__ == "__main__":
     # Parse command line arguments

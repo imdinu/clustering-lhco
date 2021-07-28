@@ -4,5 +4,3 @@ tqdm==4.59.0
 h5py==2.10.0
 numpy==1.20.2
 pandas==1.2.4
-readthedocs-sphinx-search==0.1.0rc3
-sphinx==4.0.2
