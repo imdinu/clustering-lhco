@@ -1,9 +1,5 @@
-# Processing Suite for LHC Olympics Data
+# About
+Full documentation is available at [this readthedocs.io](https://clustering-lhco.readthedocs.io/en/latest/).
 
----
-
-## Documentation
-Check the [readthedocs.io page](https://clustering-lhco.readthedocs.io/en/latest/).
-
-## Additional notes
+# Getting started
 Will be coming soon

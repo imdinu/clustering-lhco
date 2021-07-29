@@ -15,10 +15,6 @@ Example:
 At the moment the full scope of this project is yet to be realized, but the 
 remaining features are soon to be implemented.
 
-Todo:
-    * Include jet image generation functionality
-    * Implement masterkey recognition
-
 """
 
 
@@ -43,14 +39,15 @@ mpi.set_start_method('fork')
 
 def merge(path, feature):
     '''
-    Merge all .hdf files in given directory.
+    Merge all *.hdf* files in given directory.
 
     This function is called once at the end of the clustering run in order to 
     unite all the partial results obtained from parallell clustering 
     execution.
 
     Returns:
-      `DataFrame` from merged .hdf files
+      ``pd.DataFrame`` from merged *.hdf* files
+
     '''
     signal_files = sorted(path.glob(f"{feature}_sig*"))
     background_files = sorted(path.glob(f"{feature}_bkg*"))
@@ -71,7 +68,7 @@ def merge(path, feature):
     return dfs_merged[0], dfs_merged[1]
 
 
-kwargs = {
+params = {
     "R": 1.,
     "njets": 2,
     "cluster_algo": "antikt",
@@ -83,8 +80,18 @@ kwargs = {
 }
 """dict: default values for data clustering parameters
 
-The parameters in question are `R`, `njets`, `cluster_algo`, `masterkey`, `R2`
-`ptmin`, `ptmin2`, `dcut`. 
+The parameters in question are:
+    * ``R``: Radius used in primary clustering.
+    * ``njets``: Number of jets expected per event.
+    * ``cluster_algo``: Algorithm used for primary clustering (see `pyjet`
+        documentation).
+    * ``masterkey``: Path to masterkey file containing truth information.
+    * ``R2``: Radius for secondary clustering, used in the calculation of several 
+        substructure features which are dependent on sub-jets.
+    * ``ptmin``: Minimum pT cutoff of expected primary jets.
+    * ``ptmin2``: Minimum pT cutoff applied to subjets.
+    * ``dcut``: Minimmum distance between exclusive sub-jets (also used for
+        calculating substructure features).
 """
 
 if __name__ == "__main__":
@@ -96,16 +103,16 @@ if __name__ == "__main__":
     parser.add_argument("-r", action="store", default=1.0, type=float,
                         help="radius used for primary clustering")
     parser.add_argument("-j", action="store", default=0, type=int,
-                        help="number of paralell processes")
+                        help="number of parallel processes")
     parser.add_argument("--max-events", action="store", default=0, type=int,
-                        help="maximum nuber of events to cluster")
+                        help="maximum number of events to cluster")
     parser.add_argument("--chunk-size", action="store", default=0, type=int,
                         help="number of events per process")
     parser.add_argument("--tmp", action="store", default="./tmp",
                         type=Path, help="path to temporary storage folder")
     args = parser.parse_args()
 
-    # Get number of availalbe cores and workers
+    # Get number of availabe cores and workers
     n_max = psutil.cpu_count(logical=False)
     if args.j == 0:
         n_workers = n_max
@@ -129,7 +136,7 @@ if __name__ == "__main__":
         shutil.rmtree(args.tmp)
     Path.mkdir(args.tmp)
 
-    # Create progress bars for all paralell processes
+    # Create progress bars for all parallel processes
     pbars = [tqdm.tqdm(total=args.chunk_size, position=i+1, colour="cyan",
                        leave=0, ncols=79, bar_format='{l_bar}{bar}')
              for i in range(n_workers)]
@@ -138,7 +145,7 @@ if __name__ == "__main__":
     procs = [mpi.Process(target=clustering_LHCO,
                          args=(args.path, i*args.chunk_size,
                                (i+1)*args.chunk_size, args.tmp),
-                         kwargs={**{"bars": pbars}, **kwargs})
+                         kwargs={**{"bars": pbars}, **params})
              for i
              in range(n_chunks)]
     process_queue = deque(procs)
