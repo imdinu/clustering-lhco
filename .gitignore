@@ -9,7 +9,8 @@ docs/build/
 
 # Testing
 *coverage*
-reports.xml
+report.xml
+!.coveragerc
 
 # Jupyter Notebook
 .ipynb_checkpoints

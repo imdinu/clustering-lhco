@@ -115,7 +115,8 @@ The parameters in question are:
         calculating substructure features).
 """
 
-def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, **kwargs):
+def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, quiet=False, 
+                   **kwargs):
     """Applies clustering to LHC Olympics data using multiprocessing.
 
     Main function performing the clustering. It spreads the input events
@@ -136,10 +137,12 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, **kwargs):
         tmp_dir (Path): Path of the directory where temporary result files
             will be stored. *All contents of the directory will be erased.* 
             If the directory does not exist, it will be created.
+        quiet (bool): Suppresses the output of ``tqdm`` progress bars
 
     Return:
         None
     """
+
     # Get number of availabe cores and workers
     n_max = psutil.cpu_count(logical=False)
     if j == 0:
@@ -168,7 +171,8 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, **kwargs):
 
     # Create progress bars for all parallel processes
     pbars = [tqdm.tqdm(total=chunk_size, position=i+1, colour="cyan",
-                       leave=0, ncols=79, bar_format='{l_bar}{bar}')
+                       leave=0, ncols=79, bar_format='{l_bar}{bar}',
+                       disable=quiet)
              for i in range(n_workers)]
 
     # Define all chunks as processes
@@ -183,7 +187,7 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, **kwargs):
     # Define overall progress bar
     main_bar = tqdm.tqdm(total=len(procs), desc="Overall progress", ncols=79,
                          position=0, bar_format='{l_bar}{bar}{elapsed}',
-                         colour="green")
+                         colour="green", disable=quiet)
 
     # Run the processes
     finished = np.zeros(n_workers).astype(bool)
@@ -228,10 +232,14 @@ if __name__ == "__main__":
                         help="number of events per process")
     parser.add_argument("--tmp_dir", action="store", default="./tmp",
                         type=Path, help="path to temporary storage folder")
+    parser.add_argument("-Q", "--quiet", help="suppress all printing to"
+                        "stdout", action="store_true")
     args = parser.parse_args()
 
+    # Update run parameters based on comand line arguments
     params.update(vars(args))
 
+    # Execute clustering
     clustering_mpi(**params)
 
     # # Get number of availabe cores and workers

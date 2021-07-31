@@ -9,7 +9,8 @@ stages:
 
 test:
     script:
-        - coverage run -m xmlrunner --output-file report.xml
+        - coverage run --parallel-mode -m xmlrunner --output-file report.xml
+        - coverage combine
         - coverage report --omit=tests/* --precision=2
         - coverage xml
     artifacts:
