@@ -1,21 +1,20 @@
-image: python:3.7-alpine
+default:
+    image: python:3.8
+    before_script:
+       - apt-get update
+       - apt-get install -y python3-pip
+       - pip install -r requirements.txt
+stages:
+    - test
 
-pages:
-  stage: build
-  script:
-  - pip install -U sphinx
-  - sphinx-build -b html docs/source public
-  artifacts:
-    paths:
-    - public
-  only:
-  - master
+test:
+    script:
+        - coverage run -m unittest
+        - coverage xml
+    artifacts:
+    reports:
+      cobertura: coverage.xml
+      
 
-deploy:
-  stage: deploy
-  variables:
-    "EOS_PATH": "/eos/user/i/idinu/www"
-  image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer
-  script:
-    - deploy-eos
 
+  

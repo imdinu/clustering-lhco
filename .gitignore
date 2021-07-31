@@ -7,6 +7,9 @@ __pycache__/
 docs/_build/
 docs/build/
 
+# Testing
+*coverage*
+
 # Jupyter Notebook
 .ipynb_checkpoints
 
