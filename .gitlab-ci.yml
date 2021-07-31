@@ -12,8 +12,8 @@ test:
         - coverage run -m unittest
         - coverage xml
     artifacts:
-    reports:
-      cobertura: coverage.xml
+        reports:
+            cobertura: coverage.xml
       
 
 
