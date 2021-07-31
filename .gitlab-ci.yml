@@ -9,11 +9,16 @@ stages:
 
 test:
     script:
-        - coverage run -m xmlrunner --output-file reports.xml
+        - coverage run -m xmlrunner --output-file report.xml
         - coverage xml
     artifacts:
+        when: always
+        paths:
+            - coverage.xml
+            - report.xml
         reports:
             cobertura: coverage.xml
+            junit: report.xml
       
 
 
