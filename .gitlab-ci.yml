@@ -10,6 +10,7 @@ stages:
 test:
     script:
         - coverage run -m xmlrunner --output-file report.xml
+        - coverage report --omit=tests/* --precision=2
         - coverage xml
     artifacts:
         when: always
