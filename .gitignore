@@ -9,6 +9,7 @@ docs/build/
 
 # Testing
 *coverage*
+reports.xml
 
 # Jupyter Notebook
 .ipynb_checkpoints

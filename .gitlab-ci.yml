@@ -9,7 +9,7 @@ stages:
 
 test:
     script:
-        - coverage run -m unittest
+        - coverage run -m xmlrunner --output-file reports.xml
         - coverage xml
     artifacts:
         reports:
