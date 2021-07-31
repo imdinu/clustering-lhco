@@ -73,7 +73,8 @@ class TestClustering(unittest.TestCase):
             "quiet": True
         }
         mpi_args.update(params)
-
+        mpi_args['njets'] = 4
+        mpi_args['R'] = 0.3
         try:
             clustering_mpi(**mpi_args)
         except Exception:
