@@ -11,8 +11,9 @@ test:
     script:
         - coverage run --parallel-mode -m xmlrunner --output-file report.xml
         - coverage combine
-        - coverage report --omit=tests/* --precision=2
+        - coverage report --omit=tests/*
         - coverage xml
+    coverage: '/^TOTAL.+?(\d+\%)$/'
     artifacts:
         when: always
         paths:
