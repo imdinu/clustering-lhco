@@ -1,0 +1,1 @@
+sphinx-apidoc --no-toc -f -o source ..  ../tests/
