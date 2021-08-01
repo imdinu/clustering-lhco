@@ -5,7 +5,7 @@ import requests
 import shutil
 from pathlib import Path
 
-from cluster import download_file, clustering_mpi, params
+from LHCO import download_file, clustering_mpi, params
 
 DATA_PATH = Path("tiny_data.h5")
 DATA_URL =  "https://github.com/lhcolympics2020/parsingscripts/raw/a4"\
