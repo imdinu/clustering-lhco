@@ -17,7 +17,7 @@ The entire codebase is available at this
    :maxdepth: 2
    :caption: Technical Documentation:
 
-   cluster
+   LHCO
    jetminer
 
 Indices and tables

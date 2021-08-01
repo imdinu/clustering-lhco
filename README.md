@@ -35,4 +35,4 @@ Those download and cluster steps can be also accomplished individually. In this 
 Documentation on the available clustering options can be displayed using `--help` flag:
 > ./LHCO.py cluster --help
 
-If you want to implement the clustering into your own pipeline check the Technical Documentation on [readthedocs.io](https://clustering-lhco.readthedocs.io/en/latest/LHCO.html) for detailed information about the contents and implementation of this package
+If you want to implement the clustering into your own pipeline check the Technical Documentation on [readthedocs.io](https://clustering-lhco.readthedocs.io/en/latest/LHCO.html) for detailed information about the contents and implementation of this package.
