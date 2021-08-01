@@ -34,12 +34,13 @@ class TestClustering(unittest.TestCase):
     def setUpClass(cls):
         download_file(DATA_URL, DATA_PATH)
         cls.tmp = Path("./tmp_dir/")
-        cls.out_bkg = Path("./scalars_bkg.h5")
-        cls.out_sig = Path("./scalars_sig.h5")
+        cls.out_dir = Path(".")
+        cls.out_bkg = Path("./result_scalars_bkg.h5")
+        cls.out_sig = Path("./result_scalars_sig.h5")
     
     def tearDown(self):
-        os.remove("./scalars_bkg.h5")
-        os.remove("./scalars_sig.h5")
+        os.remove(self.out_bkg)
+        os.remove(self.out_sig)
 
     def test_single_core(self):
 
@@ -48,7 +49,8 @@ class TestClustering(unittest.TestCase):
             "path": DATA_PATH,
             "chunk_size": 200,
             "max_events": 500,
-            "tmp_dir": self.tmp
+            "tmp_dir": self.tmp,
+            "out_dir": self.out_dir
         }
         default_args.update(params)
 
@@ -70,7 +72,8 @@ class TestClustering(unittest.TestCase):
             "chunk_size": 0,
             "max_events": 0,
             "tmp_dir": self.tmp,
-            "quiet": True
+            "quiet": True,
+            "out_dir": self.out_dir
         }
         mpi_args.update(params)
         mpi_args['njets'] = 4
