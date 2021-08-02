@@ -18,6 +18,7 @@ report.xml
 # Datasets
 *.h5
 *.hdf
+*.masterkey
 
 # Plots
 *.pdf

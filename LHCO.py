@@ -70,17 +70,37 @@ data_urls = {
            "events_anomalydetection.h5?download=1",
     "RnD_3prong": "https://zenodo.org/record/4536377/files/"
                   "events_anomalydetection_Z_XY_qqq.h5?download=1",
-    "BBOX1": "",
-    "BOOX2": "",
-    "BBOX3": ""
+    "BBOXMC": "https://zenodo.org/record/4536624/files/"
+              "events_LHCO2020_backgroundMC_Pythia.h5?download=1",
+    "BBOX1": "https://zenodo.org/record/4536624/files/"
+             "events_LHCO2020_BlackBox1.h5?download=1",
+    "BOOX2": "https://zenodo.org/record/4536624/files/"
+             "events_LHCO2020_BlackBox2.h5?download=1",
+    "BBOX3": "https://zenodo.org/record/4536624/files/"
+             "events_LHCO2020_BlackBox3.h5?download=1"
 }
-"""dict: URLs for all LHC Olympics datasets Zenodo download links
+"""dict: URLs for all LHC Olympics datasets Zenodo download links.
+
+Key-value pairs of Dataset Identifiers and URLs.
 
 Available datasets are: 
-    ``RnD``, ``RnD_3prong``, ``BBOX1``, ``BBOX2``, ``BBOX3``
+    ``RnD``, ``RnD_3prong``, ``BBOXMC``, ``BBOX1``, ``BBOX2``, 
+    ``BBOX3``
 """
 
-def download_file(url, path, descriptor=None, chunk_size=1024, timeout=None):
+masterkey_urls = {
+    "BBOX1": "https://zenodo.org/record/4536624/files/"
+             "events_LHCO2020_BlackBox1.masterkey?download=1",
+    "BBOX3": "https://zenodo.org/record/4536624/files/"
+             "events_LHCO2020_BlackBox3.masterkey?download=1"
+}
+"""dict: URLs for LHC Olympics datasets' masterkeys.
+
+Key-value pairs of Dataset Identifiers and URLs. Only ``BBOX1`` and ``BBOX3``
+datasets have masterkeys.
+"""
+
+def download_file(url, path, descriptor=None, chunk_size=1024**2, timeout=None):
     """Downloads a file to the specified path
     
     Args:
@@ -96,7 +116,7 @@ def download_file(url, path, descriptor=None, chunk_size=1024, timeout=None):
     ans = requests.get(url, stream=True, timeout=timeout)
     with open(path, "wb") as file:
         for chunk in tqdm.tqdm(ans.iter_content(chunk_size),
-                          unit='kB',
+                          unit='MB',
                           desc=descriptor):
             if chunk:
                 file.write(chunk)
@@ -238,6 +258,7 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir,
                 out_dir.joinpath(f"{out_prefix}_{features}_sig.h5"), 
                 key="bkg")
 
+
 if __name__ == "__main__":
     # Parse command line arguments
     parser = argparse.ArgumentParser(
@@ -250,7 +271,7 @@ if __name__ == "__main__":
                      help="input hdf data file, if [-D] argument is given, "
                      "the file will first be downloaded and saved with this "
                      "path")
-    run.add_argument("-r", action="store", default=1.0, type=float,
+    run.add_argument("-R", action="store", default=1.0, type=float,
                      help="radius used for primary clustering")
     run.add_argument("-j", action="store", default=0, type=int,
                      help="number of parallel processes")
@@ -262,29 +283,60 @@ if __name__ == "__main__":
                      type=Path, help="path to temporary storage folder")
     run.add_argument("--out-dir", action="store", default=None, type=Path,
                      help="directory used for storing final results")
-    run.add_argument("--out-prefix", action="store", default="result", type=str,
-                     help="Prefix used for results' filenames")
+    run.add_argument("--out-prefix", action="store", default=None, 
+                     type=str, help="prefix used for results' filenames")
     run.add_argument("-Q", "--quiet", help="suppress all printing to"
                      "stdout", action="store_true")
     run.add_argument("-D", "--download", action="store", type=str, 
                      choices=data_urls.keys(), default=None,
-                     help="download LHC Olympics dataset identifier")
+                     help="identifier of the LHC Olympics dataset to "
+                     "download")
+    run.add_argument("-K", "--masterkey", type=Path, const=os.devnull,
+                     default=None,  nargs="?",
+                     help="path to the masterkey to separate signal/"
+                     "background; if [-D] option is given, the masterkey will"
+                     " be downloaded first and stored in the file path "
+                     "provided, use this as a flag if you want the masterkey "
+                     "stored in the same directory as the dataset")
     run.set_defaults(run=True)
     download.add_argument("download", action="store", type=str,
-                          choices=data_urls.keys(),
+                          choices=data_urls.keys(), 
                           help="LHC Olympics dataset identifier")
     download.add_argument("path", action="store", type=Path,
                           help="path used for saving the file, if it is a "
                           "dir, an appropriately named file will be created"
                           " there")
+    download.add_argument("-K", "--masterkey", type=Path, const=os.devnull, 
+                          nargs="?", default=None, 
+                          help="download the masterkey (if applicable); use"
+                          "this a flag if you want it downloaded in the same "
+                          "directory with the default name or specify a file "
+                          "path where you want the masterkey to be stored")
     download.set_defaults(run=False)
 
     # Parse command line arguments
     args = parser.parse_args()
 
     if args.download:
+
+        # If path is directory choose default filename for download
         if os.path.isdir(args.path):
             args.path = args.path.joinpath(f"LHCO_{args.download}.h5")
+
+        if args.masterkey:
+            # Check if masterkey exists for dataset
+            if args.download in masterkey_urls.keys():
+                # Use default masterkey filename if noting is provided
+                if os.path.samefile(args.masterkey, os.devnull):
+                   args.masterkey = args.path.parent.joinpath(
+                       f"LHCO_{args.download}.masterkey")
+                # Download the masterkey
+                download_file(masterkey_urls[args.download], 
+                    args.masterkey, 
+                    descriptor=f"Downloading {args.download} masterkey")
+            else:
+                raise ValueError("No masterkey available for dataset "
+                        f"{args.download}")
 
         download_file(data_urls[args.download], args.path, 
                       descriptor=f"Downloading {args.download} dataset")

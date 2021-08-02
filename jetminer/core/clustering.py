@@ -108,7 +108,7 @@ def clustering_LHCO(path_in, start, stop, path_out, bars=None, **kwargs):
     """Runs a clustering algorithm on LHC Olympics data.
 
     Args:
-        path_in (str or `Path`): Path of input LHCO dataset.
+        path_in (Path): Path of input LHCO dataset.
         start (int): Index of first desired event of the dataset.
         stop (int): Index of last desired event of the dataset.
         path_out (str or `Path`): Path of output folder, where results
@@ -127,8 +127,9 @@ def clustering_LHCO(path_in, start, stop, path_out, bars=None, **kwargs):
         if data.shape[1] % 3 == 1:
             raise ValueError("Masterkey given for data with truth bit")
         else:
-            raise NotImplementedError(
-                "Labels from masterkey not implemented yet")
+            truth_bit = np.fromfile(kwargs["masterkey"], dtype=float, 
+                                    sep='\n').astype(int)[start:stop]
+
     else:
         if data.shape[1] % 3 == 1:
             data, truth_bit = data[:, :-1], data[:, -1]
