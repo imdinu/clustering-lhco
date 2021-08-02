@@ -13,6 +13,12 @@ Example:
 
         $ ./LHCO --help
 
+    Alternatively you can import this module for use within your custom 
+    pipeline::
+
+        from LHCO import clustering_mpi, params, merge
+     
+    
 At the moment the full scope of this project is yet to be realized, but the 
 remaining features are soon to be implemented.
 
@@ -152,7 +158,7 @@ def merge(path, feature):
 
 
 def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir, 
-                   out_prefix="result", quiet=False, **kwargs):
+                   out_prefix="results", quiet=False, **kwargs):
     """Applies clustering to LHC Olympics data using multiprocessing.
 
     Main function performing the clustering. It spreads the input events
@@ -178,7 +184,7 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir,
         out_prefix (str): Prefix used for the results' filenames. 
         quiet (bool): Suppresses the output of ``tqdm`` progress bars
         **kwargs: Keyword arguments for specifing clustering parameters. 
-            Default values can be found in the ``cluster.params`` dict. 
+            Default values can be found in the ``LHCO.params`` dict. 
     Return:
         None
     """
@@ -223,7 +229,7 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir,
     process_queue = deque(procs)
 
     # Define overall progress bar
-    main_bar = tqdm.tqdm(total=len(procs), desc="Overall progress", ncols=79,
+    main_bar = tqdm.tqdm(total=len(procs), desc="Finished chunks", ncols=79,
                          position=0, bar_format='{l_bar}{bar}{elapsed}',
                          colour="green", disable=quiet)
 
@@ -244,6 +250,10 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir,
             finished = exited
             if len(process_queue) > 0:
                 process_queue.popleft().start()
+
+    # In case of `None` prefix revert to default
+    if out_prefix is None:
+        out_prefix = "results"
 
     # Merge files
     for features in ["scalars"]:

@@ -5,6 +5,7 @@ This package aims at streamlining the LHC Olympics data preprocessing steps. It 
 Full documentation is available at [this readthedocs.io page](https://clustering-lhco.readthedocs.io/en/latest/).
 
 **Coming Soon 🔜**
+- Generalized combined mass
 - Automatic Handling of `nan` and `inf` values
 - Jet image outputs
 

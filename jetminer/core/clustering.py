@@ -11,16 +11,21 @@ from jetminer import substructure
 from jetminer import eventlevel
 
 FEATURES_PYJET = ["pt", "eta", "phi", "mass", "e", ]
-FEATURES_EVENT = ["mjj", "nj"]
+"""list: features taken directly from ``PseudoJet`` objects 
 
+"""
+FEATURES_EVENT = ["mjj", "nj"]
+"""list: features calculated at the event level
+"""
 
 def cluster_event(event, cluster_algo="antikt", R=1):
     """Clusters particle flow event data into jets.
 
     Args:
-        events (np.array): 1-dimensional array of particle information (pT, eta, phi).
-        cluster_algo (str): Selection of clustering algorithm. Possible options 
-            are `kt`, `antikt`, `cambridge`, `genkt`.
+        events (np.array): 1-dimensional array of particle information 
+            (pT, eta, phi).
+        cluster_algo (str): Selection of clustering algorithm. Possible 
+            options are `kt`, `antikt`, `cambridge`, `genkt`.
         R (float): Jet radius used for clustering.
 
     Returns:
@@ -100,7 +105,7 @@ def event_features(jets):
 
 def pad_list(l, size):
     while len(l) < size:
-        l.appen(None)
+        l.append(None)
     return l
 
 
@@ -113,8 +118,8 @@ def clustering_LHCO(path_in, start, stop, path_out, bars=None, **kwargs):
         stop (int): Index of last desired event of the dataset.
         path_out (str or `Path`): Path of output folder, where results
              are stored.
-        bars ():
-        **kwargs:
+        bars (tqdm.std.tqdm): Progress bar objects defined with ``tqdm``
+        **kwargs: jet clustering parameters
 
     Returns:
         Return code 0 for success. None otherwise

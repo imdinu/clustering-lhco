@@ -48,6 +48,6 @@ def tau32(jet, **kwargs):
 
 
 def tau21(jet, **kwargs):
-    t2 = tau3(jet, **kwargs)
-    t1 = tau2(jet, **kwargs)
+    t2 = tau2(jet, **kwargs)
+    t1 = tau1(jet, **kwargs)
     return t2/t1 if t1 > 0 else np.inf
