@@ -9,6 +9,7 @@ from pyjet import cluster, DTYPE_PTEPM, JetDefinition
 
 from jetminer import substructure
 from jetminer import eventlevel
+from jetminer.eventlevel.combinedmass import make_mass_fns
 
 FEATURES_PYJET = ["pt", "eta", "phi", "mass", "e", ]
 """list: features taken directly from ``PseudoJet`` objects 
@@ -17,6 +18,7 @@ FEATURES_PYJET = ["pt", "eta", "phi", "mass", "e", ]
 FEATURES_EVENT = ["mjj", "nj"]
 """list: features calculated at the event level
 """
+
 
 def cluster_event(event, cluster_algo="antikt", R=1):
     """Clusters particle flow event data into jets.
@@ -38,8 +40,7 @@ def cluster_event(event, cluster_algo="antikt", R=1):
     pseudojets_input["eta"] = tmp[:, 1]
     pseudojets_input["phi"] = tmp[:, 2]
     jdef = JetDefinition(cluster_algo, R)
-    sequence = cluster(pseudojets_input, jdef)
-    return sequence
+    return cluster(pseudojets_input, jdef)
 
 
 def pyjet_features(jet, idx):
@@ -97,13 +98,27 @@ def event_features(jets):
     Returns:
         Dictionary of event-level features.
     """
-    return {
+    masses = {
+        f"{fn.__name__}": fn(jets)
+        for fn in make_mass_fns(len(jets))
+    }
+    misc = {
         f"{feature}": getattr(eventlevel, feature)(jets)
         for feature in eventlevel.__all__
     }
+    return {**misc, **masses}
 
 
 def pad_list(l, size):
+    """Pads the list with `None` up the required number of elements
+
+    Args:
+        l (list): the input list to be padded
+        size (int): size of the padded list
+
+    Returns:
+        The original list padded with `None` up to the given size
+    """
     while len(l) < size:
         l.append(None)
     return l
@@ -135,11 +150,10 @@ def clustering_LHCO(path_in, start, stop, path_out, bars=None, **kwargs):
             truth_bit = np.fromfile(kwargs["masterkey"], dtype=float, 
                                     sep='\n').astype(int)[start:stop]
 
+    elif data.shape[1] % 3 == 1:
+        data, truth_bit = data[:, :-1], data[:, -1]
     else:
-        if data.shape[1] % 3 == 1:
-            data, truth_bit = data[:, :-1], data[:, -1]
-        else:
-            truth_bit = None
+        truth_bit = None
 
     datachunk = []
     for row in data:
@@ -149,7 +163,7 @@ def clustering_LHCO(path_in, start, stop, path_out, bars=None, **kwargs):
         features = [pyjet_features(jet, i) for i, jet in enumerate(jets)]
         features += [substructure_features(jet, i, **kwargs)
                      for i, jet in enumerate(jets)]
-        features += [event_features(jets)]
+        features += [event_features(np.array(jets))]
         feature_dict = dict(ChainMap(*features))
         datachunk.append(feature_dict)
         bar.desc = f"Chunk {pno:02d}"

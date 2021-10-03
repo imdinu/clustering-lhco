@@ -1,3 +1,12 @@
+"""Package containing logic for jet substructure variable calculation.
+
+The currently supported features are:
+  * ``nisj``: number of subjets (in the inclusive sense)
+  * ``nesj``: number of subjets (in the exclusive sense)
+  * ``tau``N: N-subjetiness
+  * ``eRing``N: N-th energy ring
+"""
+
 from jetminer.substructure.base import *
 from jetminer.substructure.rings import *
 

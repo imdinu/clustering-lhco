@@ -3,7 +3,7 @@ from functools import lru_cache
 import numpy as np
 
 
-@lru_cache
+@lru_cache()
 def delta_r(jet1, jet2):
     return ((jet1.phi-jet2.phi)**2 + (jet1.eta-jet2.eta)**2)**0.5
 

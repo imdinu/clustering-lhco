@@ -11,7 +11,7 @@ def sum_attributes(objs, attr):
     Returns:
         Sum of all the objects' attributes, type dependent on the objects' type
     """
-    return sum([attrgetter(attr)(obj) for obj in objs])
+    return sum(attrgetter(attr)(obj) for obj in objs)
 
 
 def combined_mass(jets):
@@ -23,6 +23,10 @@ def combined_mass(jets):
     Returns:
         The combined invariant mass of the `jets`, as `float`, in GeV. 
     """
+    if None in jets:
+        jets = [j for j in jets if j]
+    if len(jets) == 0:
+        return 0
     E = sum_attributes(jets, "e")
     px = sum_attributes(jets, "px")
     py = sum_attributes(jets, "py")

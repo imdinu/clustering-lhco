@@ -4,8 +4,12 @@ This package aims at streamlining the LHC Olympics data preprocessing steps. It 
 
 Full documentation is available at [this readthedocs.io page](https://clustering-lhco.readthedocs.io/en/latest/).
 
+**Latest Update:**
+- Combined mass function generation for all combinations of jets (regardless of how many there are!!!)
+- New tests added to benchmark the results
+
 **Coming Soon 🔜**
-- Generalized combined mass
+- Masterkey support
 - Automatic Handling of `nan` and `inf` values
 - Jet image outputs
 

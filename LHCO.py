@@ -128,8 +128,7 @@ def download_file(url, path, descriptor=None, chunk_size=1024**2, timeout=None):
                 file.write(chunk)
 
 def merge(path, feature):
-    '''
-    Merge all *.hdf* files in given directory.
+    """Merge all *.hdf* files in given directory.
 
     This function is called once at the end of the clustering run in order to 
     unite all the partial results obtained from parallell clustering 
@@ -137,7 +136,7 @@ def merge(path, feature):
 
     Return:
       ``pd.DataFrame`` from merged *.hdf* files
-    '''
+    """
     signal_files = sorted(path.glob(f"{feature}_sig*"))
     background_files = sorted(path.glob(f"{feature}_bkg*"))
 
@@ -156,6 +155,37 @@ def merge(path, feature):
 
     return dfs_merged[0], dfs_merged[1]
 
+def run_procs(procs, n_workers, bar=None):
+    """Paralell execution of a collection of processes across `n_workers`.
+
+    Called by the `clusterin_mpi` function after setting up the jobs,
+    this function manages the execution of the parallel processes. Optionally
+    can display a progress bar for completed jobs.
+
+    Args:
+        procs (list): Collection of `mpi.Process` objects to be executed
+        n_workers (int): Number of physicals cores available for parallel 
+            execution of jobs
+        bar (obj): Instance of `tqdm.tqdm` used for displaying progress
+    """
+    process_queue = deque(procs)
+    finished = np.zeros(n_workers).astype(bool)
+    while sum(finished) < len(procs):
+        # Count the number of active cores
+        working = np.sum(list(map(lambda obj: obj.is_alive(), procs)))
+
+        # If all cores are busy wait, otherwise start new chunks
+        if working >= n_workers:
+            sleep(0.1)
+        else:
+            exited = np.array(
+                list(map(lambda obj: obj.exitcode, procs))) != None
+            done = np.sum(exited) - np.sum(finished)
+            if bar:
+                bar.update(done)
+            finished = exited
+            if len(process_queue) > 0:
+                process_queue.popleft().start()
 
 def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir, 
                    out_prefix="results", quiet=False, **kwargs):
@@ -191,10 +221,7 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir,
 
     # Get number of availabe cores and workers
     n_max = psutil.cpu_count(logical=False)
-    if j == 0:
-        n_workers = n_max
-    else:
-        n_workers = j
+    n_workers = n_max if j == 0 else j
 
     # Get the number of events in the input file
     f = h5py.File(path, "r")
@@ -226,7 +253,6 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir,
                          kwargs={**{"bars": pbars}, **kwargs})
              for i
              in range(n_chunks)]
-    process_queue = deque(procs)
 
     # Define overall progress bar
     main_bar = tqdm.tqdm(total=len(procs), desc="Finished chunks", ncols=79,
@@ -234,22 +260,23 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir,
                          colour="green", disable=quiet)
 
     # Run the processes
-    finished = np.zeros(n_workers).astype(bool)
-    while sum(finished) < len(procs):
-        # Count the number of active cores
-        working = np.sum(list(map(lambda obj: obj.is_alive(), procs)))
+    # finished = np.zeros(n_workers).astype(bool)
+    # while sum(finished) < len(procs):
+    #     # Count the number of active cores
+    #     working = np.sum(list(map(lambda obj: obj.is_alive(), procs)))
 
-        # If all cores are busy wait, otherwise start new chunks
-        if working >= n_workers:
-            sleep(0.1)
-        else:
-            exited = np.array(
-                list(map(lambda obj: obj.exitcode, procs))) != None
-            done = np.sum(exited) - np.sum(finished)
-            main_bar.update(done)
-            finished = exited
-            if len(process_queue) > 0:
-                process_queue.popleft().start()
+    #     # If all cores are busy wait, otherwise start new chunks
+    #     if working >= n_workers:
+    #         sleep(0.1)
+    #     else:
+    #         exited = np.array(
+    #             list(map(lambda obj: obj.exitcode, procs))) != None
+    #         done = np.sum(exited) - np.sum(finished)
+    #         main_bar.update(done)
+    #         finished = exited
+    #         if len(process_queue) > 0:
+    #             process_queue.popleft().start()
+    run_procs(procs, n_workers, main_bar)
 
     # In case of `None` prefix revert to default
     if out_prefix is None:
@@ -267,7 +294,6 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir,
             sig_df.to_hdf(
                 out_dir.joinpath(f"{out_prefix}_{features}_sig.h5"), 
                 key="bkg")
-
 
 if __name__ == "__main__":
     # Parse command line arguments
@@ -291,7 +317,7 @@ if __name__ == "__main__":
                      help="number of events per process")
     run.add_argument("--tmp-dir", action="store", default="./tmp",
                      type=Path, help="path to temporary storage folder")
-    run.add_argument("--out-dir", action="store", default=None, type=Path,
+    run.add_argument("--out-dir", action="store", default=".", type=Path,
                      help="directory used for storing final results")
     run.add_argument("--out-prefix", action="store", default=None, 
                      type=str, help="prefix used for results' filenames")
@@ -308,6 +334,8 @@ if __name__ == "__main__":
                      " be downloaded first and stored in the file path "
                      "provided, use this as a flag if you want the masterkey "
                      "stored in the same directory as the dataset")
+    run.add_argument("--njets", action="store", default=2, type=int,
+                     help="Expected number of jets per event")
     run.set_defaults(run=True)
     download.add_argument("download", action="store", type=str,
                           choices=data_urls.keys(), 
@@ -335,18 +363,17 @@ if __name__ == "__main__":
 
         if args.masterkey:
             # Check if masterkey exists for dataset
-            if args.download in masterkey_urls.keys():
-                # Use default masterkey filename if noting is provided
-                if os.path.samefile(args.masterkey, os.devnull):
-                   args.masterkey = args.path.parent.joinpath(
-                       f"LHCO_{args.download}.masterkey")
-                # Download the masterkey
-                download_file(masterkey_urls[args.download], 
-                    args.masterkey, 
-                    descriptor=f"Downloading {args.download} masterkey")
-            else:
+            if args.download not in masterkey_urls.keys():
                 raise ValueError("No masterkey available for dataset "
                         f"{args.download}")
+            # Use default masterkey filename if noting is provided
+            if os.path.samefile(args.masterkey, os.devnull):
+                args.masterkey = args.path.parent.joinpath(
+                    f"LHCO_{args.download}.masterkey")
+            # Download the masterkey
+            download_file(masterkey_urls[args.download], 
+                args.masterkey, 
+                descriptor=f"Downloading {args.download} masterkey")
 
         download_file(data_urls[args.download], args.path, 
                       descriptor=f"Downloading {args.download} dataset")

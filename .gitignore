@@ -1,5 +1,5 @@
 # Byte-compiled / optimized / DLL files
-__pycache__/
+__pycache__
 *.py[cod]
 *$py.class
 
@@ -7,13 +7,9 @@ __pycache__/
 docs/_build/
 docs/build/
 
-# Testing
-*coverage*
-report.xml
-!.coveragerc
-
 # Jupyter Notebook
 .ipynb_checkpoints
+*.ipynb
 
 # Datasets
 *.h5
@@ -26,3 +22,9 @@ report.xml
 # vscode
 *.code-workspace
 .vscode
+
+# Testing
+*coverage*
+report.xml
+!.coveragerc
+!/tests/*.h5
