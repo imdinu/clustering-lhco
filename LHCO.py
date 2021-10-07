@@ -80,7 +80,7 @@ data_urls = {
               "events_LHCO2020_backgroundMC_Pythia.h5?download=1",
     "BBOX1": "https://zenodo.org/record/4536624/files/"
              "events_LHCO2020_BlackBox1.h5?download=1",
-    "BOOX2": "https://zenodo.org/record/4536624/files/"
+    "BBOX2": "https://zenodo.org/record/4536624/files/"
              "events_LHCO2020_BlackBox2.h5?download=1",
     "BBOX3": "https://zenodo.org/record/4536624/files/"
              "events_LHCO2020_BlackBox3.h5?download=1"

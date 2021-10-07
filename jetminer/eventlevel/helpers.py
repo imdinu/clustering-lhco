@@ -23,9 +23,9 @@ def combined_mass(jets):
     Returns:
         The combined invariant mass of the `jets`, as `float`, in GeV. 
     """
-    if None in jets:
-        jets = [j for j in jets if j]
-    if len(jets) == 0:
+
+    jets = [j for j in jets if j is not None]
+    if not jets:
         return 0
     E = sum_attributes(jets, "e")
     px = sum_attributes(jets, "px")

@@ -7,10 +7,10 @@ Full documentation is available at [this readthedocs.io page](https://clustering
 **Latest Update:**
 - Combined mass function generation for all combinations of jets (regardless of how many there are!!!)
 - New tests added to benchmark the results
+- Masterkey support
+- Minor bugfixes
 
 **Coming Soon 🔜**
-- Masterkey support
-- Automatic Handling of `nan` and `inf` values
 - Jet image outputs
 
 # Quick Start
