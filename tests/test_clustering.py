@@ -39,21 +39,18 @@ class TestClustering(unittest.TestCase):
         cls.out_dir = Path(".")
         cls.out_bkg = Path("./results_scalars_bkg.h5")
         cls.out_sig = Path("./results_scalars_sig.h5")
-    
-    @classmethod
-    def tearDownClass(self):
-        shutil.rmtree(self.tmp)
-        os.remove(DATA_PATH)
+
 
     def test_single_core(self):
 
         default_args = {
             "j": 1,
             "path": DATA_PATH,
-            "chunk_size": 200,
+            "chunk_size": 250,
             "max_events": 500,
             "tmp_dir": self.tmp,
-            "out_dir": self.out_dir
+            "out_dir": self.out_dir,
+            "quiet": True
         }
         default_args.update(params)
 
@@ -71,7 +68,7 @@ class TestClustering(unittest.TestCase):
     def test_mpi(self):
 
         mpi_args = {
-            "j": 0,
+            "j": 10,
             "path": DATA_PATH,
             "chunk_size": 0,
             "max_events": 0,
@@ -99,10 +96,6 @@ class TestResults(unittest.TestCase):
         cls.result_files = [Path("results_scalars_bkg.h5"), 
                        Path("results_scalars_sig.h5")]
 
-    @classmethod
-    def tearDownClass(self):
-        for f in self.result_files:
-            os.remove(f)
 
     def test_file_integrity(self):
         for f in self.result_files:
@@ -125,8 +118,8 @@ class TestResults(unittest.TestCase):
         sig = pd.read_hdf(self.result_files[1])
         bkg = pd.read_hdf(self.result_files[0])
 
-        self.assertEqual(sig.shape[0], 35)
-        self.assertEqual(bkg.shape[0], 365)
+        self.assertEqual(sig.shape[0], 44)
+        self.assertEqual(bkg.shape[0], 456)
 
 
 

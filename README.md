@@ -9,6 +9,9 @@ Full documentation is available at [this readthedocs.io page](https://clustering
 - Jet image generation
 - Minor bugfixes
 
+## Known Issue:
+- if the chunk size is not a divisor of the number of events, some events will be left out a fix is incoming
+
 **Coming Soon 🔜**
 - Clustering config via JSON
 - Testing coverage for image generation

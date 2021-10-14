@@ -137,6 +137,7 @@ def merge(path, feature):
     Return:
       ``pd.DataFrame`` from merged *.hdf* files
     """
+    
     signal_files = sorted(path.glob(f"{feature}_sig*"))
     background_files = sorted(path.glob(f"{feature}_bkg*"))
 
@@ -303,9 +304,10 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir,
     # Define all chunks as processes
     procs = [mpi.Process(target=clustering_LHCO,
                          args=(path, i*chunk_size,
-                               (i+1)*chunk_size, tmp_dir, 
-                               scalars, images),
-                         kwargs={**{"bars": pbars}, **kwargs})
+                               (i+1)*chunk_size, tmp_dir),
+                         kwargs={**{"bars": pbars, "scalars": 
+                                    scalars, "images": images}, 
+                                **kwargs})
              for i
              in range(n_chunks)]
 

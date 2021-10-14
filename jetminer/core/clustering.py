@@ -128,8 +128,8 @@ def pad_list(l, size):
     return l
 
 
-def clustering_LHCO(path_in, start, stop, path_out, scalars, images, 
-                    img_config=None, bars=None, **kwargs):
+def clustering_LHCO(path_in, start, stop, path_out, scalars=True,
+                    images=False, img_config=None, bars=None, **kwargs):
     """Runs a clustering algorithm on LHC Olympics data.
 
     Args:
@@ -164,7 +164,8 @@ def clustering_LHCO(path_in, start, stop, path_out, scalars, images,
     else:
         truth_bit = None
 
-    img_def = load_json(img_config)
+    if images:
+        img_def = load_json(img_config)
 
     datachunk = []
     imagechunk = []
