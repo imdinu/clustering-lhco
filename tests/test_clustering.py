@@ -6,7 +6,6 @@ import shutil
 from pathlib import Path
 
 import pandas as pd
-import numpy as np
 
 from LHCO import download_file, clustering_mpi, params
 
@@ -122,18 +121,14 @@ class TestResults(unittest.TestCase):
 
         self.assertTrue(sig_col == bkg_col == true_col)
 
-    def test_data_content(self):
+    def test_data_size(self):
         sig = pd.read_hdf(self.result_files[1])
         bkg = pd.read_hdf(self.result_files[0])
 
         self.assertEqual(sig.shape[0], 35)
         self.assertEqual(bkg.shape[0], 365)
 
-        sig_ref = pd.read_hdf("./tests/sig_desc.h5")
-        bkg_ref = pd.read_hdf("./tests/bkg_desc.h5")
 
-        self.assertTrue(np.all(sig.describe() == sig_ref))
-        self.assertTrue(np.all(bkg.describe() == bkg_ref))
 
 
 

@@ -28,6 +28,8 @@ def tau(jet, i, **kwargs):
     else:
         return 0
 
+def nc(jet, **kwargs):
+    return len(jet)
 
 def tau3(jet, **kwargs):
     return tau(jet, 3, **kwargs)

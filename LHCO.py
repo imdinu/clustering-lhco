@@ -26,7 +26,6 @@ remaining features are soon to be implemented.
 
 
 import argparse
-from email.policy import default
 import os
 import shutil
 import psutil
@@ -42,6 +41,7 @@ import numpy as np
 import pandas as pd
 
 from jetminer import clustering_LHCO
+from jetminer.core.clustering import _save_images, _save_scalars
 
 mpi.set_start_method('fork')
 
@@ -141,19 +141,65 @@ def merge(path, feature):
     background_files = sorted(path.glob(f"{feature}_bkg*"))
 
     files_list = [background_files, signal_files]
-    dfs_merged = []
-
+    data_merged = []
     for files in files_list:
-        df_list = []
-        if files:
-            for filename in files:
-                df = pd.read_hdf(filename)
-                df.reset_index(drop=True)
-                df_list.append(df)
-        dfs_merged.append(pd.concat(df_list, axis=0, ignore_index=True)
-                          if df_list else None)
+        if feature == "images":
+            array_list = []
+            if files:
+                for filename in files:
+                    hf = h5py.File(filename, 'r')
+                    key = list(hf.keys())[0]
+                    array_list.append(np.array(hf[key][:]))
+            data_merged.append(np.concatenate(array_list)
+                            if array_list else None)
+        elif feature == "scalars":
+            df_list = []
+            if files:
+                for filename in files:
+                    df = pd.read_hdf(filename)
+                    df.reset_index(drop=True)
+                    df_list.append(df)
+            data_merged.append(pd.concat(df_list, axis=0, ignore_index=True)
+                            if df_list else None)
 
-    return dfs_merged[0], dfs_merged[1]
+    return data_merged[0], data_merged[1]
+
+def merge_all(tmp_dir, out_prefix, out_dir):
+    """Merges both images and/or scalar files resulted from clustering.
+    
+    Args:
+        tmp_dir (Path): path of the directory where temporary result files
+            will be stored. *All contents of the directory will be erased.* 
+            If the directory does not exist, it will be created.
+        out_dir (Path): path of the directory where the merged result will be
+            saved.
+        out_prefix (str): prefix used for the results' filenames. 
+    Return:
+        None
+    """
+    for features in ["images", "scalars"]:
+        bkg_df, sig_df = merge(tmp_dir, features)
+        
+        if features == "scalars":
+            if bkg_df is not None:
+                bkg_df.to_hdf(
+                    out_dir.joinpath(f"{out_prefix}_{features}_bkg.h5"), 
+                    key="bkg")
+            if sig_df is not None:
+                sig_df.to_hdf(
+                    out_dir.joinpath(f"{out_prefix}_{features}_sig.h5"), 
+                    key="sig")
+        else:
+            if bkg_df is not None:
+                imgs_file = out_dir.joinpath(f"{out_prefix}_{features}_bkg.h5")
+                hf = h5py.File(imgs_file, 'w')
+                hf.create_dataset('bkg', data=bkg_df)
+                hf.close()
+            if sig_df is not None:
+                imgs_file = out_dir.joinpath(f"{out_prefix}_{features}_sig.h5")
+                hf = h5py.File(imgs_file, 'w')
+                hf.create_dataset('sig', data=sig_df)
+                hf.close()
 
 def run_procs(procs, n_workers, bar=None):
     """Paralell execution of a collection of processes across `n_workers`.
@@ -188,7 +234,8 @@ def run_procs(procs, n_workers, bar=None):
                 process_queue.popleft().start()
 
 def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir, 
-                   out_prefix="results", quiet=False, **kwargs):
+                   out_prefix="results", quiet=False, scalars=True,
+                   images=False, **kwargs):
     """Applies clustering to LHC Olympics data using multiprocessing.
 
     Main function performing the clustering. It spreads the input events
@@ -198,26 +245,33 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir,
     will be merged.
 
     Args:
-        path (Path): Path of `.hdf` input file containing LHCO data.
+        path (Path): path of `.hdf` input file containing LHCO data.
         j (int): Number of logical cores to distribute the load. If 0, then all
             available cores will be used.
-        max_events (int): Maximum number of events to be used. If 0, all events
+        max_events (int): maximum number of events to be used. If 0, all events
             in the file will be used.
-        chunk_size (int): Number of events to be distributed to each job. If
+        chunk_size (int): number of events to be distributed to each job. If
             0, then the chunk size will e adjusted so that the number of jobs 
             is equal to the number of logical cores
-        tmp_dir (Path): Path of the directory where temporary result files
+        tmp_dir (Path): path of the directory where temporary result files
             will be stored. *All contents of the directory will be erased.* 
             If the directory does not exist, it will be created.
-        out_dir (Path): Path of the directory where the merged result will be
+        out_dir (Path): path of the directory where the merged result will be
             saved.
-        out_prefix (str): Prefix used for the results' filenames. 
-        quiet (bool): Suppresses the output of ``tqdm`` progress bars
-        **kwargs: Keyword arguments for specifing clustering parameters. 
+        out_prefix (str): prefix used for the results' filenames. 
+        quiet (bool): suppresses the output of ``tqdm`` progress bars
+        scalars (bool): compute the scalar features after clustering
+        images (bool): generate jet images after clustering
+        **kwargs: keyword arguments for specifing clustering parameters. 
             Default values can be found in the ``LHCO.params`` dict. 
     Return:
         None
+
     """
+
+    if not scalars and not images:
+        raise RuntimeWarning("Nothing to do with clustered data, "
+                            "no output features will be generated")
 
     # Get number of availabe cores and workers
     n_max = psutil.cpu_count(logical=False)
@@ -249,7 +303,8 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir,
     # Define all chunks as processes
     procs = [mpi.Process(target=clustering_LHCO,
                          args=(path, i*chunk_size,
-                               (i+1)*chunk_size, tmp_dir),
+                               (i+1)*chunk_size, tmp_dir, 
+                               scalars, images),
                          kwargs={**{"bars": pbars}, **kwargs})
              for i
              in range(n_chunks)]
@@ -259,41 +314,16 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir,
                          position=0, bar_format='{l_bar}{bar}{elapsed}',
                          colour="green", disable=quiet)
 
-    # Run the processes
-    # finished = np.zeros(n_workers).astype(bool)
-    # while sum(finished) < len(procs):
-    #     # Count the number of active cores
-    #     working = np.sum(list(map(lambda obj: obj.is_alive(), procs)))
-
-    #     # If all cores are busy wait, otherwise start new chunks
-    #     if working >= n_workers:
-    #         sleep(0.1)
-    #     else:
-    #         exited = np.array(
-    #             list(map(lambda obj: obj.exitcode, procs))) != None
-    #         done = np.sum(exited) - np.sum(finished)
-    #         main_bar.update(done)
-    #         finished = exited
-    #         if len(process_queue) > 0:
-    #             process_queue.popleft().start()
     run_procs(procs, n_workers, main_bar)
 
     # In case of `None` prefix revert to default
     if out_prefix is None:
         out_prefix = "results"
 
-    # Merge files
-    for features in ["scalars"]:
-        bkg_df, sig_df = merge(tmp_dir, features)
 
-        if bkg_df is not None:
-            bkg_df.to_hdf(
-                out_dir.joinpath(f"{out_prefix}_{features}_bkg.h5"), 
-                key="bkg")
-        if sig_df is not None:
-            sig_df.to_hdf(
-                out_dir.joinpath(f"{out_prefix}_{features}_sig.h5"), 
-                key="bkg")
+    # Merge files
+    merge_all(tmp_dir, out_prefix, out_dir)
+
 
 if __name__ == "__main__":
     # Parse command line arguments
@@ -336,6 +366,14 @@ if __name__ == "__main__":
                      "stored in the same directory as the dataset")
     run.add_argument("--njets", action="store", default=2, type=int,
                      help="Expected number of jets per event")
+    run.add_argument("--scalars", action="store", default=True, type=bool,
+                     help="compute scalar features of the events after "
+                     "clustering")
+    run.add_argument("--images", action="store", default=False, type=bool,
+                    help="create jet images from clustered events ")
+    run.add_argument("--img-config", action="store", type=Path,
+                     default=Path("./img_config.json"), help="path to the "
+                     "json configuration file for image generation")
     run.set_defaults(run=True)
     download.add_argument("download", action="store", type=str,
                           choices=data_urls.keys(), 

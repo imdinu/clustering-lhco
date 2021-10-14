@@ -9,6 +9,7 @@ Subpackages
 
    jetminer.eventlevel
    jetminer.substructure
+   jetminer.image
 
 Module contents
 ---------------

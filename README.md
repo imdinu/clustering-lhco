@@ -5,13 +5,14 @@ This package aims at streamlining the LHC Olympics data preprocessing steps. It 
 Full documentation is available at [this readthedocs.io page](https://clustering-lhco.readthedocs.io/en/latest/).
 
 **Latest Update:**
-- Combined mass function generation for all combinations of jets (regardless of how many there are!!!)
-- New tests added to benchmark the results
-- Masterkey support
+- Added a new scalar feature **nc** (number of constituents)
+- Jet image generation
 - Minor bugfixes
 
 **Coming Soon 🔜**
-- Jet image outputs
+- Clustering config via JSON
+- Testing coverage for image generation
+- Updated README
 
 # Quick Start
 
@@ -73,6 +74,10 @@ By default the maximum number of logical cores is used for the value of ``-j``. 
 
 All parameters associated with the clustering process can be specified directly through command line options. Among those options you can choose: ``-R``, ``--njets``, ``--cluster_algo``, `-R2`, ``ptmin``, ``ptmin2``, ``dcut``.
 The clustering parameters' description and default values can be found [here](https://clustering-lhco.readthedocs.io/en/latest/LHCO.html#LHCO.params).
+
+## Jet images
+
+To be written . . .
 
 
 
