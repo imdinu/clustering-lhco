@@ -1,14 +1,12 @@
 import numpy as np
 from pyjet import cluster, DTYPE_PTEPM
 
-(pT_i, rap_i, phi_i) = (0, 1, 2)
-"""tuple: interpretation of the input array coulmn numbers
-
-The columns represented are:
- * ``pT_i``: transverse momentum
- * ``rap_i``: (pseudo)rapidity
- * ``phi_i``: azimuthal angle
-"""
+pT_i = 0 
+"""column index for tranvsevers momentum ``p_T``"""
+rap_i = 1
+"""column index of the (pseudo)rapidity ``y``"""
+phi_i = 2
+"""column index of the azymuthal angle ``phi``"""
 
 default_options = {
 
@@ -31,13 +29,14 @@ def average_centroid(jet, npix, pix_width):
 
     Args:
         jet (np.array): An array of particles where each particle is of the 
-        form `[pt,y,phi]` 
-    npix (int): the number of pixels on one edge of the jet image, which 
-        is presumed to be a square.
-    pix_width (float): the size of one pixel of the jet image in the 
-        rapidity-azimuth plane.
+            form `[pt,y,phi]` 
+        npix (int): the number of pixels on one edge of the jet image, which 
+            is presumed to be a square.
+        pix_width (float): the size of one pixel of the jet image in the 
+            rapidity-azimuth plane.
     Returns:
-        rap_indices, phi_indices: indices used for pixelation
+        rap_indices(np.ndarray), phi_indices(np.ndarray): indices used for 
+            pixelation
     """
     rap_avg = np.average(jet[:,rap_i], weights=jet[:,pT_i])
     phi_avg = np.average(jet[:,phi_i], weights=jet[:,pT_i])
@@ -88,7 +87,7 @@ def make_image(jet, rap_indices, phi_indices, npix):
         npix (int): image width or height in pixels
 
     Return:
-        2D ``np.ndarray`` jet image 
+        jet_image (np.ndarray): jet image as a 2D-array
     """
 
     # delete elements outside of range
@@ -142,7 +141,8 @@ def transform(jet, subjet_array, img_width, pix_width, rotate, offset):
             with respect to the bottom edge of the image; a vlaue of 0.5
             will result in this cluster being perfectly cenetered 
     Returns:
-        rap_indices, phi_indices: indices used for pixelation
+        rap_indices(np.ndarray), phi_indices(np.ndarray): indices used for 
+            pixelation
     """
     # define pivot and edge coordinates
     rap_p = subjet_array[0].eta

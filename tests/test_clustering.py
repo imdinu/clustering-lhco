@@ -2,10 +2,11 @@ import unittest
 
 import os
 import requests
-import shutil
 from pathlib import Path
 
+import h5py
 import pandas as pd
+import numpy as np
 
 from LHCO import download_file, clustering_mpi, params
 
@@ -39,14 +40,15 @@ class TestClustering(unittest.TestCase):
         cls.out_dir = Path(".")
         cls.out_bkg = Path("./results_scalars_bkg.h5")
         cls.out_sig = Path("./results_scalars_sig.h5")
-
+        cls.img_bkg = Path("./results_images_bkg.h5")
+        cls.img_sig = Path("./results_images_sig.h5")
 
     def test_single_core(self):
 
         default_args = {
             "j": 1,
             "path": DATA_PATH,
-            "chunk_size": 250,
+            "chunk_size": 150,
             "max_events": 500,
             "tmp_dir": self.tmp,
             "out_dir": self.out_dir,
@@ -89,7 +91,35 @@ class TestClustering(unittest.TestCase):
         self.assertTrue(self.out_bkg.is_file())
         self.assertTrue(self.out_sig.is_file())
 
-class TestResults(unittest.TestCase):
+    def test_imgs(self):
+
+        mpi_args = {
+            "j": 10,
+            "path": DATA_PATH,
+            "chunk_size": 0,
+            "max_events": 0,
+            "scalars": False,
+            "images": True,
+            "img_config": "./img_config.json",
+            "tmp_dir": self.tmp,
+            "quiet": True,
+            "out_dir": self.out_dir
+        }
+        mpi_args.update(params)
+        mpi_args['njets'] = 2
+        mpi_args['R'] = 1
+        try:
+            clustering_mpi(**mpi_args)
+        except Exception:
+            self.fail("Exceptions raised during clustering")
+
+        self.assertTrue(self.tmp.is_dir())
+        self.assertTrue(os.listdir(self.tmp))
+        self.assertTrue(self.img_bkg.is_file())
+        self.assertTrue(self.img_sig.is_file())
+
+
+class TestScalars(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -102,7 +132,7 @@ class TestResults(unittest.TestCase):
             try:
                 pd.read_hdf(f)
             except Exception:
-                self.fail("Exceptions raised during clustering")
+                self.fail("scalar results could not be read")
 
     def test_data_format(self):
         sig_col = set(pd.read_hdf(self.result_files[1]).columns)
@@ -121,7 +151,32 @@ class TestResults(unittest.TestCase):
         self.assertEqual(sig.shape[0], 44)
         self.assertEqual(bkg.shape[0], 456)
 
+class TestImages(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        cls.result_files = [Path("results_images_bkg.h5"), 
+                       Path("results_images_sig.h5")]
+
+
+    def test_file_integrity(self):
+        for f in self.result_files:
+            try:
+               self._read_img(f)
+            except Exception:
+                self.fail("Images could not be read")
+
+    def test_data_format(self):
+        self.sig = self._read_img(self.result_files[1])
+        self.bkg = self._read_img(self.result_files[0])
+
+        self.assertTrue(self.sig.shape == (82, 32, 32, 2))
+        self.assertTrue(self.bkg.shape == (818, 32, 32, 2))
+
+    def _read_img(self, path):
+        hf = h5py.File(path, 'r')
+        key = list(hf.keys())[0]
+        return np.array(hf[key][:])
 
 
 

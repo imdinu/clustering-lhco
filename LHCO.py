@@ -285,10 +285,12 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir,
     if max_events < n_events and max_events != 0:
         n_events = max_events
 
-    # Get the chunk size and number of chunks
+    # Get the chunk size and list of chunks
     if chunk_size == 0:
-        chunk_size = n_events // n_workers
-    n_chunks = n_events // chunk_size
+        chunk_size = (n_events // n_workers) // 10 if n_events > 100*n_workers else 100
+    chunks = [i for i in range(0,n_events,chunk_size) ]
+    if n_events%chunk_size != 0:
+        chunks.append(n_events)
 
     # Define work directory tree
     if tmp_dir.exists():
@@ -303,13 +305,13 @@ def clustering_mpi(path, j, max_events, chunk_size, tmp_dir, out_dir,
 
     # Define all chunks as processes
     procs = [mpi.Process(target=clustering_LHCO,
-                         args=(path, i*chunk_size,
-                               (i+1)*chunk_size, tmp_dir),
+                         args=(path, start,
+                               stop, tmp_dir),
                          kwargs={**{"bars": pbars, "scalars": 
                                     scalars, "images": images}, 
                                 **kwargs})
-             for i
-             in range(n_chunks)]
+             for start, stop
+             in zip(chunks[:-1], chunks[1:])]
 
     # Define overall progress bar
     main_bar = tqdm.tqdm(total=len(procs), desc="Finished chunks", ncols=79,
