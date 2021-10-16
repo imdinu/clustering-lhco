@@ -5,13 +5,10 @@ This package aims at streamlining the LHC Olympics data preprocessing steps. It 
 Full documentation is available at [this readthedocs.io page](https://clustering-lhco.readthedocs.io/en/latest/).
 
 ## Latest Update:
-- Added a new scalar feature **nc** (number of constituents)
-- Jet image generation
 - Fixed chunk bug related to chunk size rounding errors. Now no events are ignored, even if the chunk size is not among the divisors of the number of events.
+- Empty images will generate warnings instead of exceptions
 - Test coverage for image generation
 
-**Known Issues:**
-- Occasional exceptions `FloatingPointError('Image had no particles!')` thrown on the RnD dataset when attempting to generate images. Investigations are in progress.
 
 # Quick Start
 
@@ -87,7 +84,7 @@ This package also offers the option to represent the clustered data as jet image
 If you are not interested in computing the scalar features and want to save up some execution time, the scalar computation can be disabled with `--scalars=False`
 
 Image generation can be customized through a json file. The default parameters are accessible through [img_config.json](img_config.json). The meaning of those options is the following:
-- `stitch_jets`: option to place multiple jets on the same image. If enabled, every event will be represented as a single jet image, in this case, it is recommended to use higher values for the covered width in the ($\eta$,$\phi$)-plane $\Rightarrow$ `img_width` $\ge 3$. When this option is disabled, every jet will be represented a different *channel* of the image. In this case, smaller image widths could be used in order to capture finer jet substructure details. The resulting dataset will have the shape `(n_events, npix, npix, njets)` when `stitch_jets=false` and `(n_events, npix, npix, 1)` if `stitch_jets=true`
+- `stitch_jets`: option to place multiple jets on the same image. If enabled, every event will be represented as a single jet image, in this case, it is recommended to use higher values for the covered width in the ($\eta$,$\phi$)-plane $\Rightarrow$ `img_width` $\ge 4$. When this option is disabled, every jet will be represented a different *channel* of the image. In this case, smaller image widths could be used in order to capture finer jet substructure details. The resulting dataset will have the shape `(n_events, npix, npix, njets)` when `stitch_jets=false` and `(n_events, npix, npix, 1)` if `stitch_jets=true`
 - `npix`: width (and height) of the jet image, in pixels. At the moment only square images are supported
 - `img_width`: the width (and height) covered by the image in the ($\eta$,$\phi$)-plane, in units of $\Delta R$. The smaller the width, the more *zoomed-in* the jet image appears
 - `rotate`: option to rotate the image, such that the two leading secondary clusters are aligned on the vertical axis. The next-to-leading cluster will **always** be placed under the leading cluster,on the vertical axis. 

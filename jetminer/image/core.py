@@ -1,5 +1,6 @@
 import numpy as np
 from pyjet import cluster, DTYPE_PTEPM
+import warnings
 
 pT_i = 0 
 """column index for tranvsevers momentum ``p_T``"""
@@ -231,14 +232,14 @@ def pixelate(jet,
             raise NotImplementedError("Rotation only available when "
                                       "avg_centroid=False")
         if trim:
-            sequence = cluster(pseudojets_input, R=options["R1"], p=1)
+            sequence = cluster(pseudojets_input, R=options["R2"], p=1)
             subjet_array = sequence.inclusive_jets()
             jet = trim_jet(pseudojets_input, subjet_array, 
                         options["R1"], options["fcut"])
         rap_indices, phi_indices = average_centroid(jet, npix, pix_width)
 
     else:
-        sequence = cluster(pseudojets_input, R=options["R1"], p=1)
+        sequence = cluster(pseudojets_input, R=options["R2"], p=1)
         subjet_array = sequence.inclusive_jets()
         if trim:
             jet = trim_jet(pseudojets_input, subjet_array, 
@@ -253,11 +254,12 @@ def pixelate(jet,
     # L1-normalize the pt channels of the jet image
     if norm:
         normfactor = np.sum(jet_image[...,pT_i])
-        if normfactor == 0:
-            raise FloatingPointError('Image had no particles!')
-        else: 
-            jet_image[...,0] /= normfactor
-
+        if normfactor > 0:
+            jet_image[...,0] /= normfactor 
+        elif normfactor == 0:
+            warnings.warn("Image has no particles", RuntimeWarning)
+        else:
+            raise RuntimeError("Negative image normfactor")
     return jet_image 
 
 def image_from_jets(jets, stitch_jets=False, **kwargs):
